@@ -40,10 +40,8 @@ export async function POST(request: NextRequest) {
       if (body[key] !== undefined) {
         const { error } = await sb
           .from("configuracion")
-          .upsert(
-            { clave: key, valor: String(body[key]), updated_at: new Date().toISOString() },
-            { onConflict: "clave" }
-          )
+          .update({ valor: String(body[key]), updated_at: new Date().toISOString() })
+          .eq("clave", key)
 
         if (error) {
           return NextResponse.json({ error: `Error saving ${key}: ${error.message}` }, { status: 500 })
