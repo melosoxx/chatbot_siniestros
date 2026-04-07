@@ -17,8 +17,9 @@ export async function GET() {
     }
 
     return NextResponse.json(config)
-  } catch {
-    return NextResponse.json({ error: "Error interno" }, { status: 500 })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Error interno GET: ${message}` }, { status: 500 })
   }
 }
 
@@ -36,21 +37,28 @@ export async function POST(request: NextRequest) {
       "webhook_secret",
     ]
 
+    const results: Record<string, string> = {}
+
     for (const key of keys) {
       if (body[key] !== undefined) {
-        const { error } = await sb
+        const { error, count } = await sb
           .from("configuracion")
           .update({ valor: String(body[key]), updated_at: new Date().toISOString() })
           .eq("clave", key)
 
         if (error) {
-          return NextResponse.json({ error: `Error saving ${key}: ${error.message}` }, { status: 500 })
+          return NextResponse.json(
+            { error: `Error saving ${key}: ${error.message}`, code: error.code, details: error.details, hint: error.hint },
+            { status: 500 }
+          )
         }
+        results[key] = `updated (count: ${count})`
       }
     }
 
-    return NextResponse.json({ status: "saved" })
-  } catch {
-    return NextResponse.json({ error: "Error interno" }, { status: 500 })
+    return NextResponse.json({ status: "saved", results })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Error interno POST: ${message}` }, { status: 500 })
   }
 }

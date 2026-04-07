@@ -76,15 +76,21 @@ export default function ConfiguracionPage() {
   // Load config from Supabase on mount
   useEffect(() => {
     fetch("/api/configuracion")
-      .then((res) => res.json())
-      .then((config) => {
-        setEvolutionUrl(config.evolution_api_url || "")
-        setEvolutionApiKey(config.evolution_api_key || "")
-        setEvolutionInstanceName(config.evolution_instance_name || "")
-        setWebhookActivo(config.webhook_activo !== "false")
+      .then(async (res) => {
+        const data = await res.json()
+        if (!res.ok) {
+          toast.error(`Error cargando config: ${data.error || res.statusText}`, { duration: 10000 })
+          console.error("[Config] Load error:", res.status, data)
+          return
+        }
+        setEvolutionUrl(data.evolution_api_url || "")
+        setEvolutionApiKey(data.evolution_api_key || "")
+        setEvolutionInstanceName(data.evolution_instance_name || "")
+        setWebhookActivo(data.webhook_activo !== "false")
       })
-      .catch(() => {
-        toast.error("Error cargando configuración")
+      .catch((err) => {
+        toast.error(`Error de conexión: ${err.message}`, { duration: 10000 })
+        console.error("[Config] Fetch error:", err)
       })
       .finally(() => setLoadingConfig(false))
   }, [])
@@ -109,11 +115,19 @@ export default function ConfiguracionPage() {
         }),
       })
 
-      if (!res.ok) throw new Error("Error al guardar")
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(`Error guardando: ${data.error || res.statusText}`, { duration: 10000 })
+        console.error("[Config] Error response:", res.status, data)
+        return
+      }
 
       toast.success("Configuración guardada correctamente")
-    } catch {
-      toast.error("Error guardando configuración")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      toast.error(`Error de conexión: ${message}`, { duration: 10000 })
+      console.error("[Config] Fetch error:", err)
     } finally {
       setSaving(false)
     }
