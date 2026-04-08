@@ -4,7 +4,6 @@ import type {
   Asegurado,
   Denuncia,
   DenunciaConDetalles,
-  PlantillaMensaje,
 } from "./types"
 
 type SupabaseClient = ReturnType<typeof createServerSupabaseClient>
@@ -33,10 +32,45 @@ export async function fetchDenuncias(client?: SupabaseClient): Promise<Denuncia[
   return data as Denuncia[]
 }
 
-export async function fetchPlantillasMensajes(client?: SupabaseClient): Promise<PlantillaMensaje[]> {
-  const { data, error } = await getClient(client).from("plantillas_mensajes").select("*")
+// --- Asegurados CRUD ---
+
+export async function createAsegurado(
+  asegurado: Omit<Asegurado, "id">,
+  client?: SupabaseClient
+): Promise<Asegurado> {
+  const { data, error } = await getClient(client)
+    .from("asegurados")
+    .insert(asegurado)
+    .select()
+    .single()
   if (error) throw error
-  return data as PlantillaMensaje[]
+  return data as Asegurado
+}
+
+export async function updateAsegurado(
+  id: string,
+  updates: Partial<Omit<Asegurado, "id">>,
+  client?: SupabaseClient
+): Promise<Asegurado> {
+  const { data, error } = await getClient(client)
+    .from("asegurados")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Asegurado
+}
+
+export async function deleteAsegurado(
+  id: string,
+  client?: SupabaseClient
+): Promise<void> {
+  const { error } = await getClient(client)
+    .from("asegurados")
+    .delete()
+    .eq("id", id)
+  if (error) throw error
 }
 
 // --- Composed queries ---
@@ -100,86 +134,5 @@ export async function getDenunciasConAsegurado(client?: SupabaseClient) {
     agente_nombre: d.agente_asignado_id
       ? agentesMap.get(d.agente_asignado_id) || "Sin asignar"
       : "Sin asignar",
-  }))
-}
-
-export async function getEstadisticas(client?: SupabaseClient) {
-  const { data, error } = await getClient(client).from("denuncias").select("estado")
-  if (error) throw error
-
-  const list = data || []
-  return {
-    total: list.length,
-    pendientes: list.filter((d: { estado: string }) => d.estado === "Pendiente").length,
-    enRevision: list.filter((d: { estado: string }) => d.estado === "En revisión").length,
-    resueltas: list.filter((d: { estado: string }) => d.estado === "Resuelto").length,
-    rechazadas: list.filter((d: { estado: string }) => d.estado === "Rechazado").length,
-    documentacionIncompleta: list.filter((d: { estado: string }) => d.estado === "Documentación incompleta").length,
-  }
-}
-
-export async function getDenunciasPorDia(client?: SupabaseClient) {
-  const hoy = new Date()
-  const treintaDiasAtras = new Date()
-  treintaDiasAtras.setDate(treintaDiasAtras.getDate() - 30)
-
-  const { data, error } = await getClient(client)
-    .from("denuncias")
-    .select("created_at")
-    .gte("created_at", treintaDiasAtras.toISOString())
-
-  if (error) throw error
-
-  const counts: Record<string, number> = {}
-  for (const d of data || []) {
-    const day = d.created_at.split("T")[0]
-    counts[day] = (counts[day] || 0) + 1
-  }
-
-  const dias: { fecha: string; cantidad: number }[] = []
-  for (let i = 29; i >= 0; i--) {
-    const fecha = new Date(hoy)
-    fecha.setDate(fecha.getDate() - i)
-    const fechaStr = fecha.toISOString().split("T")[0]
-    dias.push({ fecha: fechaStr, cantidad: counts[fechaStr] || 0 })
-  }
-
-  return dias
-}
-
-export async function getDenunciasPorTipo(client?: SupabaseClient) {
-  const { data, error } = await getClient(client).from("denuncias").select("tipo_siniestro")
-  if (error) throw error
-
-  const tipos = [
-    "Robo",
-    "Choque vehicular",
-    "Incendio",
-    "Inundación",
-    "Daño por terceros",
-    "Otro",
-  ] as const
-
-  return tipos.map((tipo) => ({
-    tipo,
-    cantidad: (data || []).filter((d: { tipo_siniestro: string }) => d.tipo_siniestro === tipo).length,
-  }))
-}
-
-export async function getDenunciasActivasPorAgente(client?: SupabaseClient) {
-  const sb = getClient(client)
-
-  const [agentesRes, denunciasRes] = await Promise.all([
-    sb.from("agentes").select("*"),
-    sb.from("denuncias")
-      .select("agente_asignado_id, estado")
-      .not("estado", "in", '("Resuelto","Rechazado")'),
-  ])
-
-  return (agentesRes.data || []).map((agente: Agente) => ({
-    ...agente,
-    denuncias_activas: (denunciasRes.data || []).filter(
-      (d: { agente_asignado_id: string | null }) => d.agente_asignado_id === agente.id
-    ).length,
   }))
 }

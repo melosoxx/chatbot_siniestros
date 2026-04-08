@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard,
   FileText,
   Users,
   Settings,
@@ -26,18 +25,13 @@ import {
 
 const navigation = [
   {
-    title: "Dashboard",
-    url: "/",
-    icon: LayoutDashboard,
-  },
-  {
     title: "Denuncias",
     url: "/denuncias",
     icon: FileText,
   },
   {
-    title: "Agentes",
-    url: "/agentes",
+    title: "Asegurados",
+    url: "/asegurados",
     icon: Users,
   },
   {
@@ -56,7 +50,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
+              <Link href="/denuncias">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Shield className="size-4" />
                 </div>
@@ -79,7 +73,7 @@ export function AppSidebar() {
               {navigation.map((item) => {
                 const isActive =
                   pathname === item.url ||
-                  (item.url !== "/" && pathname.startsWith(item.url))
+                  pathname.startsWith(item.url)
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton

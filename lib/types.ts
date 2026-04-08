@@ -54,6 +54,7 @@ export interface Mensaje {
   contenido: string
   direccion: DireccionMensaje
   timestamp: string
+  external_id?: string | null
 }
 
 export interface NotaInterna {
@@ -110,4 +111,31 @@ export interface ConfiguracionWebhook {
   url: string
   token: string
   activo: boolean
+}
+
+// Chatbot IA
+
+export type PasoConversacion =
+  | "bienvenida"
+  | "tipo_siniestro"
+  | "fecha_hecho"
+  | "ubicacion"
+  | "descripcion"
+  | "confirmacion"
+  | "completado"
+
+export interface Conversacion {
+  id: string
+  asegurado_id: string
+  denuncia_id: string | null
+  paso_actual: PasoConversacion
+  datos_parciales: Partial<{
+    tipo_siniestro: string
+    fecha_hecho: string
+    ubicacion: string
+    descripcion: string
+  }>
+  activa: boolean
+  created_at: string
+  updated_at: string
 }

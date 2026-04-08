@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 import { Bell, LogOut, User } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
@@ -30,9 +30,8 @@ import { fetchDenuncias } from "@/lib/supabase-queries"
 import type { Denuncia } from "@/lib/types"
 
 const breadcrumbMap: Record<string, string> = {
-  "/": "Dashboard",
   "/denuncias": "Denuncias",
-  "/agentes": "Agentes",
+  "/asegurados": "Asegurados",
   "/configuracion": "Configuración",
 }
 
@@ -41,7 +40,7 @@ function getBreadcrumbs(pathname: string, denuncias: Denuncia[]) {
   const breadcrumbs: { label: string; href: string }[] = []
 
   if (pathname === "/") {
-    return [{ label: "Dashboard", href: "/" }]
+    return [{ label: "Denuncias", href: "/denuncias" }]
   }
 
   let currentPath = ""
@@ -85,18 +84,18 @@ export function AppHeader() {
       <Breadcrumb className="flex-1">
         <BreadcrumbList>
           {breadcrumbs.map((crumb, index) => (
-            <BreadcrumbItem key={crumb.href}>
-              {index < breadcrumbs.length - 1 ? (
-                <>
+            <Fragment key={crumb.href}>
+              <BreadcrumbItem>
+                {index < breadcrumbs.length - 1 ? (
                   <BreadcrumbLink asChild>
                     <Link href={crumb.href}>{crumb.label}</Link>
                   </BreadcrumbLink>
-                  <BreadcrumbSeparator />
-                </>
-              ) : (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              )}
-            </BreadcrumbItem>
+                ) : (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+              {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+            </Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>

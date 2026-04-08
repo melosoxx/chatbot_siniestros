@@ -35,6 +35,16 @@ export async function POST(request: NextRequest) {
       "evolution_instance_name",
       "webhook_activo",
       "webhook_secret",
+      // Chatbot IA
+      "chatbot_activo",
+      "chatbot_modelo",
+      "chatbot_system_prompt",
+      "chatbot_mensaje_bienvenida",
+      "chatbot_prompt_tipo_siniestro",
+      "chatbot_prompt_fecha_hecho",
+      "chatbot_prompt_ubicacion",
+      "chatbot_prompt_descripcion",
+      "chatbot_mensaje_confirmacion",
     ]
 
     const results: Record<string, string> = {}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 export function useSupabaseQuery<T>(
   queryFn: () => Promise<T>,
@@ -9,6 +9,9 @@ export function useSupabaseQuery<T>(
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const refetch = useCallback(() => setRefreshKey((k) => k + 1), [])
 
   useEffect(() => {
     let cancelled = false
@@ -27,7 +30,7 @@ export function useSupabaseQuery<T>(
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [refreshKey, ...deps])
 
-  return { data, loading, error }
+  return { data, loading, error, refetch }
 }
